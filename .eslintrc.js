@@ -1,6 +1,13 @@
 module.exports = {
   extends: ['blitz'],
   rules: {
-    quotes: ['error', 'single'],
+    quotes: [
+      'error',
+      'single',
+      {
+        avoidEscape: true,
+        allowTemplateLiterals: true,
+      },
+    ],
   },
 }

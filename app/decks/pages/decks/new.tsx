@@ -21,6 +21,7 @@ const NewDeckPage: BlitzPage = () => {
         onSubmit={async (values) => {
           try {
             const deck = await createDeckMutation(values)
+            if (!deck) return
             router.push(Routes.ShowDeckPage({ deckId: deck.id }))
           } catch (error) {
             console.error(error)
