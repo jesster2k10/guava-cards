@@ -1,9 +1,9 @@
-import { BlitzConfig, sessionMiddleware, simpleRolesIsAuthorized } from "blitz"
+import { BlitzConfig, sessionMiddleware, simpleRolesIsAuthorized } from 'blitz'
 
 const config: BlitzConfig = {
   middleware: [
     sessionMiddleware({
-      cookiePrefix: "guava-cards",
+      cookiePrefix: 'guava-cards',
       isAuthorized: simpleRolesIsAuthorized,
     }),
   ],

@@ -2,21 +2,25 @@
   "name": "guava-cards",
   "version": "1.0.0",
   "scripts": {
-    "dev": "blitz dev",
+    "dev": "blitz dev --port 8000",
     "build": "blitz build",
     "start": "blitz start",
     "studio": "blitz prisma studio",
     "lint": "eslint --ignore-path .gitignore --ext .js,.ts,.tsx .",
+    "format": "prettier ./**/*.{ts,tsx} -w && eslint --fix --ext .js,.ts,.tsx .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "gen:theme-typings": "chakra-cli tokens app/core/theme/index.ts",
+    "postinstall": "yarn gen:theme-typings"
   },
   "prisma": {
     "schema": "db/schema.prisma"
   },
   "prettier": {
     "semi": false,
-    "printWidth": 100
+    "printWidth": 100,
+    "singleQuote": true
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -24,21 +28,33 @@
     ]
   },
   "dependencies": {
+    "@chakra-ui/react": "1.6.5",
+    "@chakra-ui/theme-tools": "1.1.8",
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
+    "@meronex/icons": "4.0.0",
     "@prisma/client": "2.27.0",
     "blitz": "0.38.5",
-    "react-dom": "alpha",
+    "dayjs": "1.10.6",
+    "formik": "2.2.9",
+    "formik-chakra-ui": "1.4.7",
+    "framer-motion": "^4",
+    "lodash": "4.17.21",
     "react": "alpha",
-    "zod": "3.5.1",
-    "formik": "2.2.9"
+    "react-cookie": "4.0.3",
+    "react-dom": "alpha",
+    "universal-cookie": "4.0.4",
+    "zod": "3.5.1"
   },
   "devDependencies": {
+    "@chakra-ui/cli": "1.5.0",
     "@types/preview-email": "2.0.1",
     "@types/react": "17.0.14",
     "eslint": "7.31.0",
     "husky": "6.0.0",
     "lint-staged": "10.5.4",
-    "prettier-plugin-prisma": "0.14.0",
     "prettier": "2.3.2",
+    "prettier-plugin-prisma": "0.14.0",
     "pretty-quick": "3.1.1",
     "preview-email": "3.0.4",
     "prisma": "2.27.0",

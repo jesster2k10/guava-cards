@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgres"
   url      = env("DATABASE_URL")
 }
 
@@ -13,53 +13,188 @@ generator client {
 // --------------------------------------
 
 model User {
-  id             Int      @id @default(autoincrement())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             Int           @id @default(autoincrement())
   name           String?
-  email          String   @unique
-  hashedPassword String?
-  role           String   @default("USER")
+  email          String        @unique
+  hashedPassword String?       @map("hashed_password")
+  role           String        @default("USER")
+  createdAt      DateTime      @default(now()) @map("updated_at")
+  updatedAt      DateTime      @updatedAt @map("created_at")
+  firstName      String        @map("first_name")
+  lastName       String        @map("last_name")
+  username       String        @unique @map("username")
+  bio            String?
+  tokens         Token[]
+  sessions       Session[]
+  decks          Deck[]
+  folders        Folder[]
+  integrations   Integration[]
+  cards          Card[]
+  tags           Tag[]
 
-  tokens   Token[]
-  sessions Session[]
+  @@map("users")
+}
+
+// A third party user account
+model Integration {
+  id                Int                 @id @default(autoincrement())
+  user              User                @relation(fields: [userId], references: [id])
+  userId            Int                 @map("user_id")
+  uid               String
+  provider          IntegrationProvider
+  accessToken       String              @map("access_token")
+  accessTokenSecret String              @map("access_token_secret")
+  refreshToken      String              @map("refresh_token")
+  profile           Json?
+  expiresAt         DateTime            @map("expires_at")
+  createdAt         DateTime            @default(now()) @map("updated_at")
+  updatedAt         DateTime            @updatedAt @map("created_at")
+
+  @@map("integrations")
+}
+
+enum IntegrationProvider {
+  FACEBOOK
+  GOOGLE
 }
 
 model Session {
   id                 Int       @id @default(autoincrement())
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  expiresAt          DateTime?
+  expiresAt          DateTime? @map("expires_at")
   handle             String    @unique
-  hashedSessionToken String?
-  antiCSRFToken      String?
-  publicData         String?
-  privateData        String?
+  hashedSessionToken String?   @map("hashed_session_token")
+  antiCSRFToken      String?   @map("anti_csrf_token")
+  publicData         String?   @map("public_data")
+  privateData        String?   @map("private_data")
+  user               User?     @relation(fields: [userId], references: [id])
+  userId             Int?      @map("user_id")
+  createdAt          DateTime  @default(now()) @map("updated_at")
+  updatedAt          DateTime  @updatedAt @map("created_at")
 
-  user   User? @relation(fields: [userId], references: [id])
-  userId Int?
+  @@map("sessions")
 }
 
 model Token {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  hashedToken String
-  type        String
-  // See note below about TokenType enum
-  // type        TokenType
-  expiresAt   DateTime
-  sentTo      String
-
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
+  id          Int       @id @default(autoincrement())
+  hashedToken String    @map("hashed_token")
+  type        TokenType
+  expiresAt   DateTime  @map("expires_at")
+  sentTo      String    @map("sent_to")
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int       @map("user_id")
+  createdAt   DateTime  @default(now()) @map("updated_at")
+  updatedAt   DateTime  @updatedAt @map("created_at")
 
   @@unique([hashedToken, type])
+  @@map("tokens")
 }
 
 // NOTE: It's highly recommended to use an enum for the token type
 //       but enums only work in Postgres.
 //       See: https://blitzjs.com/docs/database-overview#switch-to-postgresql
-// enum TokenType {
-//   RESET_PASSWORD
-// }
+
+enum TokenType {
+  RESET_PASSWORD
+}
+
+model Deck {
+  id               Int            @id @default(autoincrement())
+  name             String
+  description      String
+  position         Int            @unique @default(0)
+  visbilityMode    VisibilityMode @map("visibility_mode")
+  user             User           @relation(fields: [userId], references: [id])
+  userId           Int            @map("user_id")
+  emojiUnicode     String         @map("emoji_unicode")
+  emojiDescription String         @map("emoji_description")
+  createdAt        DateTime       @default(now()) @map("updated_at")
+  updatedAt        DateTime       @updatedAt @map("created_at")
+  folders          Folder[]
+  cards            Card[]
+  tags             Tag[]
+
+  @@map("decks")
+}
+
+enum VisibilityMode {
+  PRIVATE // only visible to the current user
+  UNLISTED // anyone with a direct link can view it
+  RESTRICTED // only certain people are granted access
+  PUBLIC // anyone has access
+}
+
+model Folder {
+  id               Int      @id @default(autoincrement())
+  name             String
+  color            String?
+  emojiUnicode     String   @map("emoji_unicode")
+  emojiDescription String   @map("emoji_description")
+  position         Int      @unique @default(0)
+  user             User     @relation(fields: [userId], references: [id])
+  userId           Int      @map("user_id")
+  decks            Deck[]
+  tags             Tag[]
+  createdAt        DateTime @default(now()) @map("updated_at")
+  updatedAt        DateTime @updatedAt @map("created_at")
+
+  @@map("folders")
+}
+
+model Card {
+  id                Int                  @id @default(autoincrement())
+  user              User                 @relation(fields: [userId], references: [id])
+  userId            Int                  @map("user_id")
+  contents          CardContentHistory[]
+  searchableContent String?              @map("searchable_content") // What we'll use when searching through our cards
+  decks             Deck[]
+  tags              Tag[]
+  position          Int                  @default(0)
+  createdAt         DateTime             @default(now()) @map("updated_at")
+  updatedAt         DateTime             @updatedAt @map("created_at")
+
+  @@unique([userId, position])
+  @@map("cards")
+}
+
+enum CardContentType {
+  BASIC // this card has a rich content front, and a back
+  CLOZE // this card has a rich content front (with cloze deletions), and an optional additional content
+  LIST // this card has a rich content front, and the back is a list of entries
+  TYPE_ANSWER // this card has a rich content front, and a plan text back which you must type the answer to
+}
+
+model CardContentHistory {
+  id        Int         @id @default(autoincrement())
+  content   CardContent @relation(fields: [contentId], references: [id])
+  contentId Int         @map("content_id")
+  card      Card        @relation(fields: [cardId], references: [id])
+  cardId    Int         @map("card_id")
+  active    Boolean?
+  timestamp DateTime    @default(now())
+
+  @@map("card_content_histories")
+}
+
+model CardContent {
+  id        Int                  @id @default(autoincrement())
+  type      CardContentType      @map("content_type")
+  createdAt DateTime             @default(now()) @map("updated_at")
+  updatedAt DateTime             @updatedAt @map("created_at")
+  histories CardContentHistory[]
+
+  @@map("card_contents")
+}
+
+model Tag {
+  id          Int      @id @default(autoincrement())
+  text        String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int      @map("user_id")
+  colorScheme String?  @map("color_scheme")
+  decks       Deck[]
+  cards       Card[]
+  folders     Folder[]
+
+  @@unique([userId, text])
+  @@map("tags")
+}

@@ -1,3 +1,6 @@
 module.exports = {
-  extends: ["blitz"],
+  extends: ['blitz'],
+  rules: {
+    quotes: ['error', 'single'],
+  },
 }

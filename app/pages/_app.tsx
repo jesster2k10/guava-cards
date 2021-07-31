@@ -1,40 +1,42 @@
-import {
-  AppProps,
-  ErrorBoundary,
-  ErrorComponent,
-  AuthenticationError,
-  AuthorizationError,
-  ErrorFallbackProps,
-  useQueryErrorResetBoundary,
-} from "blitz"
-import LoginForm from "app/auth/components/LoginForm"
+import { AppProps, ErrorBoundary, useQueryErrorResetBoundary, App as BlitzApp } from 'blitz'
+import { AppContext } from 'next/app'
+import { ChakraProvider, cookieStorageManager, localStorageManager } from '@chakra-ui/react'
+import { theme } from 'app/core/theme'
+import { RootErrorFallback } from 'app/core/components/RootErrorFallback'
+import { Cookies, CookiesProvider } from 'react-cookie'
+import { DynamicColorMode } from 'app/core/theme/DynamicColorMode'
+import { css, Global } from '@emotion/react'
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
 
-export default function App({ Component, pageProps }: AppProps) {
+dayjs.extend(localizedFormat)
+
+const App = ({ Component, pageProps }: AppProps) => {
+  const { cookies } = pageProps?._global ?? {}
   const getLayout = Component.getLayout || ((page) => page)
+  const colorModeManager = cookies ? cookieStorageManager(cookies) : localStorageManager
 
   return (
-    <ErrorBoundary
-      FallbackComponent={RootErrorFallback}
-      onReset={useQueryErrorResetBoundary().reset}
-    >
-      {getLayout(<Component {...pageProps} />)}
-    </ErrorBoundary>
+    <CookiesProvider cookies={new Cookies(cookies)}>
+      <ChakraProvider colorModeManager={colorModeManager} theme={theme}>
+        <DynamicColorMode>
+          <ErrorBoundary
+            FallbackComponent={RootErrorFallback}
+            onReset={useQueryErrorResetBoundary().reset}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </ErrorBoundary>
+        </DynamicColorMode>
+        <Global
+          styles={css`
+            #__next {
+              height: 100%;
+            }
+          `}
+        />
+      </ChakraProvider>
+    </CookiesProvider>
   )
 }
 
-function RootErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
-  if (error instanceof AuthenticationError) {
-    return <LoginForm onSuccess={resetErrorBoundary} />
-  } else if (error instanceof AuthorizationError) {
-    return (
-      <ErrorComponent
-        statusCode={error.statusCode}
-        title="Sorry, you are not authorized to access this"
-      />
-    )
-  } else {
-    return (
-      <ErrorComponent statusCode={error.statusCode || 400} title={error.message || error.name} />
-    )
-  }
-}
+export default App

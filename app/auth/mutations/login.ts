@@ -1,15 +1,33 @@
-import { resolver, SecurePassword, AuthenticationError } from "blitz"
-import db from "db"
-import { Login } from "../validations"
-import { Role } from "types"
+import { resolver, SecurePassword, AuthenticationError } from 'blitz'
+import db, { User } from 'db'
+import { Login } from '../validations'
+import { Role } from 'types'
 
-export const authenticateUser = async (rawEmail: string, rawPassword: string) => {
+export type Login_User = Omit<User, 'hashedPassword'>
+
+export const authenticateUser = async (
+  rawEmail: string,
+  rawPassword: string
+): Promise<Login_User> => {
   const email = rawEmail.toLowerCase().trim()
   const password = rawPassword.trim()
   const user = await db.user.findFirst({ where: { email } })
-  if (!user) throw new AuthenticationError()
+  if (!user) {
+    throw new AuthenticationError('Invalid username or password')
+  }
 
-  const result = await SecurePassword.verify(user.hashedPassword, password)
+  // try {
+  let result: symbol
+
+  try {
+    result = await SecurePassword.verify(user.hashedPassword, password)
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      throw new AuthenticationError('The password you entered was incorrect')
+    }
+
+    throw error
+  }
 
   if (result === SecurePassword.VALID_NEEDS_REHASH) {
     // Upgrade hashed password with a more secure hash

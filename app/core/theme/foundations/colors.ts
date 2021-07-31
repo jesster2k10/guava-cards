@@ -1,0 +1,81 @@
+import { theme } from '@chakra-ui/react'
+
+const pallete = {
+  charcoal: {
+    DEFAULT: '#191919',
+    '50': '#303030',
+    '100': '#2D2D2D',
+    '200': '#282828',
+    '300': '#232323',
+    '400': '#1E1E1E',
+    '500': '#191919',
+    '600': '#141414',
+    '700': '#0F0F0F',
+    '800': '#0A0A0A',
+    '900': '#050505',
+  },
+  snow: {
+    DEFAULT: '#E8E8E8',
+    '50': '#FDFDFD',
+    '100': '#FCFCFC',
+    '200': '#FAFAFA',
+    '300': '#F7F7F7',
+    '400': '#F5F5F5',
+    '500': '#F2F2F2',
+    '600': '#EAEAEA',
+    '700': '#E3E3E3',
+    '800': '#DBDBDB',
+    '900': '#D3D3D3',
+  },
+  brand: {
+    '50': '#E5E49F',
+    '100': '#DFDE8B',
+    '200': '#D4D363',
+    '300': '#C9C83B',
+    '400': '#A4A32D',
+    '500': '#7C7B22',
+    '600': '#68671D',
+    '700': '#545317',
+    '800': '#403F12',
+    '900': '#2C2C0C',
+  },
+  google: {
+    DEFAULT: '#DB4437',
+    '50': '#ED9F98',
+    '100': '#EB958D',
+    '200': '#E78178',
+    '300': '#E36C62',
+    '400': '#DF584D',
+    '500': '#DB4437',
+    '600': '#D33426',
+    '700': '#BD2E22',
+    '800': '#A7291E',
+    '900': '#92241A',
+  },
+  red: {
+    50: '#fef2f2',
+    100: '#fee2e2',
+    200: '#fecaca',
+    300: '#fca5a5',
+    400: '#f87171',
+    500: '#ef4444',
+    600: '#dc2626',
+    700: '#b91c1c',
+    800: '#991b1b',
+    900: '#7f1d1d',
+  },
+}
+
+export const colors = {
+  ...pallete,
+  modes: {
+    dark: {
+      background: pallete.charcoal,
+      secondary: theme.colors.whiteAlpha,
+    },
+    light: {
+      background: pallete.snow,
+      secondary: theme.colors.blackAlpha,
+    },
+  },
+}
